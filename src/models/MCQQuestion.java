@@ -1,5 +1,5 @@
-package src.models;
+package models;
 
-public class MCQQuestion {
+public class MCQQuestion{
     
 }

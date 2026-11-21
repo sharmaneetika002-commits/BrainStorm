@@ -1,4 +1,4 @@
-package src.scoring;
+package scoring;
 public class ScoreManager {
     
 }
