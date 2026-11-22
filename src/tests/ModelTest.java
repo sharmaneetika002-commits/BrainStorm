@@ -1,39 +1,61 @@
 package tests;
+
 import models.*;
 
 public class ModelTest {
 
     public static void main(String[] args) {
 
-        // Testing Player
-        Player player = new Player("Paavani");
-        player.addScore(10);
+        // Testing multiple players
+        Player player1 = new Player("Paavani");
+        Player player2 = new Player("Player 2");
 
-        System.out.println("Player: " + player.getName());
-        System.out.println("Score: " + player.getScore());
+        player1.addScore(10);
+        player1.addScore(5);
+        player2.addScore(10);
 
-        // Testing MCQQuestion
-        String[] options = {"Java", "Python", "C++", "HTML"};
+        System.out.println("Player 1: " + player1.getName());
+        System.out.println("Player 1 Score: " + player1.getScore());
 
-        MCQQuestion question = new MCQQuestion(
-            "Which language is used for Java applications?",
+        System.out.println("Player 2: " + player2.getName());
+        System.out.println("Player 2 Score: " + player2.getScore());
+
+        // Creating questions using inheritance
+        String[] options1 = {"Java", "Python", "C++", "HTML"};
+
+        Question q1 = new MCQQuestion(
+            "Which is a programming language?",
             5,
-            options,
+            options1,
             0
         );
 
-        System.out.println("Correct answer: " +
-            question.checkAnswer("Java"));
+        String[] options2 = {
+            "implements", "extends", "import", "package"
+        };
 
-        System.out.println("Wrong answer: " +
-            question.checkAnswer("Python"));
+        Question q2 = new MCQQuestion(
+            "Which keyword is used for class inheritance in Java?",
+            5,
+            options2,
+            1
+        );
 
-        // Testing Quiz
+        // Testing polymorphism
+        System.out.println("Q1 Correct: " + q1.checkAnswer("Java"));
+        System.out.println("Q2 Correct: " + q2.checkAnswer("extends"));
+
+        // Testing Quiz collection
         Quiz quiz = new Quiz(QuizCategory.JAVA);
-        quiz.addQuestion(question);
 
-        System.out.println("Quiz Category: " + quiz.getCategory());
+        quiz.addQuestion(q1);
+        quiz.addQuestion(q2);
+
+        System.out.println("Category: " + quiz.getCategory());
         System.out.println("Total Questions: " +
             quiz.getQuestions().size());
+
+        System.out.println("First question through Quiz: " +
+            quiz.getQuestions().get(0).checkAnswer("Java"));
     }
 }
