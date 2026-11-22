@@ -17,6 +17,13 @@ public abstract class Question {
     {
         return marks; 
     }
+    public void setQuestionText(String questionText) {
+        this.questionText = questionText;
+    }
+
+    public void setMarks(int marks) {
+        this.marks = marks;
+    }
     abstract boolean checkAnswer(String answer);
 
 

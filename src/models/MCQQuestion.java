@@ -20,11 +20,9 @@ public class MCQQuestion extends Question {
     }
 
     @Override
-    public boolean checkAnswer(String answer) {
-        if (answer.equalsIgnoreCase(options[correctAnswer]))
-            return true;
-        else
-            return false;
-    }
+public boolean checkAnswer(String answer) {
+    return answer != null &&
+           answer.equalsIgnoreCase(options[correctAnswer]);
+}
 
 }
