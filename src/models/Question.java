@@ -24,7 +24,7 @@ public abstract class Question {
     public void setMarks(int marks) {
         this.marks = marks;
     }
-    abstract boolean checkAnswer(String answer);
+    public abstract boolean checkAnswer(String answer);
 
 
 }
