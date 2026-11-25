@@ -1,58 +1,146 @@
+
 package app;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import models.MCQQuestion;
+
 import models.Player;
 import models.Question;
-import data.QuestionBank;
+import database.QuestionDAO;
 
 public class Main {
 
     public static void main(String[] args) {
-        QuestionBank bank = new QuestionBank();
-        System.out.println("Welcome to BrainStorm");
+
+        System.out.println("Welcome to QuizVerse");
+
         Scanner sc = new Scanner(System.in);
+
         System.out.print("Enter number of players: ");
         int numberOfPlayers = sc.nextInt();
         sc.nextLine();
+
         if (numberOfPlayers <= 0) {
             System.out.println("You need at least one player!");
             sc.close();
             return;
         }
+
         List<Player> players = new ArrayList<>();
+
         for (int i = 0; i < numberOfPlayers; i++) {
-            System.out.println("Enter your name: ");
+            System.out.print("Enter your name: ");
             String name = sc.nextLine();
+
             Player player = new Player(name);
             players.add(player);
-
         }
-        bank.addQuestion("Java", new MCQQuestion(
-                "Which language runs on the JVM?",
-                10,
-                new String[] { "Python", "Java", "C", "JavaScript" },
-                1));
 
-        bank.addQuestion("Java", new MCQQuestion(
-                "Which keyword is used to inherit a class in Java?",
-                10,
-                new String[] { "implements", "extends", "inherits", "super" },
-                1));
+        // Subject selection
+        System.out.println("\nSelect a subject:");
+        System.out.println("1. Java");
+        System.out.println("2. JavaScript");
+        System.out.println("3. C Programming");
+        System.out.println("4. DBMS");
 
-        bank.addQuestion("DBMS", new MCQQuestion(
-                "Which SQL command retrieves data?",
-                10,
-                new String[] { "INSERT", "UPDATE", "SELECT", "DELETE" },
-                2));
+        int choice = 0;
 
-        List<Question> questions = new ArrayList<>();
+        while (choice < 1 || choice > 4) {
 
-        questions.addAll(bank.getQuestionsByCategory("Java"));
-        questions.addAll(bank.getQuestionsByCategory("DBMS"));
+            System.out.print("Enter your choice (1-4): ");
+
+            String input = sc.nextLine();
+
+            try {
+                choice = Integer.parseInt(input);
+
+                if (choice < 1 || choice > 4) {
+                    System.out.println("Please enter a number between 1 and 4.");
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number, not text.");
+            }
+        }
+
+        String category;
+
+        switch (choice) {
+            case 1:
+                category = "Java";
+                break;
+            case 2:
+                category = "JavaScript";
+                break;
+            case 3:
+                category = "C Programming";
+                break;
+            case 4:
+                category = "DBMS";
+                break;
+            default:
+                System.out.println("Invalid subject choice!");
+                sc.close();
+                return;
+        }
+
+        // Fetch questions from MySQL
+        QuestionDAO dao = new QuestionDAO();
+
+        // Difficulty selection
+        System.out.println("\nSelect difficulty:");
+        System.out.println("1. Easy");
+        System.out.println("2. Medium");
+        System.out.println("3. Hard");
+
+        int difficultyChoice = 0;
+
+        while (difficultyChoice < 1 || difficultyChoice > 3) {
+            System.out.print("Enter your choice (1-3): ");
+            String input = sc.nextLine();
+
+            try {
+                difficultyChoice = Integer.parseInt(input);
+
+                if (difficultyChoice < 1 || difficultyChoice > 3) {
+                    System.out.println("Please enter a number between 1 and 3.");
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a number.");
+            }
+        }
+
+        String difficulty;
+
+        switch (difficultyChoice) {
+            case 1:
+                difficulty = "Easy";
+                break;
+            case 2:
+                difficulty = "Medium";
+                break;
+            case 3:
+                difficulty = "Hard";
+                break;
+            default:
+                difficulty = "Easy";
+        }
+        
+        List<Question> questions = dao.getQuestionsByCategoryAndDifficulty(category, difficulty);
+
+        System.out.println("Loading " + difficulty + " " + category + " questions...");
+
+        if (questions.isEmpty()) {
+            System.out.println("No " + difficulty + " questions available for " + category + "!");
+            sc.close();
+            return;
+        }
+
+        // Start the game
         QuizEngine game = new QuizEngine(players, questions, sc);
+
         game.startQuiz();
 
         sc.close();
