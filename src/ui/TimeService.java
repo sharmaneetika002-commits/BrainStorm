@@ -1,88 +1,94 @@
+
 package ui;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.swing.SwingUtilities;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TimeService {
 
-    private ScheduledExecutorService executor;
-    private ScheduledFuture<?> timerTask;
+    private static final int TIME_LIMIT = 10;
 
-    private volatile int remainingSeconds;
+    private static final BlockingQueue<String> inputQueue =
+            new LinkedBlockingQueue<>();
 
-    public interface TimerListener {
-        void onTimeUpdate(int seconds);
-        void onTimeUp();
-    }
+    private static boolean readerStarted = false;
 
-    public TimeService() {
-        executor = Executors.newSingleThreadScheduledExecutor();
-    }
+    private static synchronized void startInputReader(Scanner sc) {
 
-    public synchronized void startTimer(
-            int seconds, TimerListener listener) {
-
-        stopTimer();
-
-        if (seconds <= 0 || listener == null) {
-            throw new IllegalArgumentException(
-                "Invalid timer settings."
-            );
+        if (readerStarted) {
+            return;
         }
 
-        remainingSeconds = seconds;
+        readerStarted = true;
 
-        SwingUtilities.invokeLater(
-            () -> listener.onTimeUpdate(remainingSeconds)
-        );
+        Thread inputThread = new Thread(() -> {
+            while (sc.hasNextLine()) {
+                try {
+                    inputQueue.put(sc.nextLine());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        });
 
-        timerTask = executor.scheduleAtFixedRate(() -> {
+        inputThread.setDaemon(true);
+        inputThread.start();
+    }
 
-            remainingSeconds--;
+    public static String getAnswerWithTimer(Scanner sc) {
 
-            SwingUtilities.invokeLater(
-                () -> listener.onTimeUpdate(remainingSeconds)
-            );
+        startInputReader(sc);
 
-            if (remainingSeconds <= 0) {
+        inputQueue.clear();
 
-                stopTimer();
+        AtomicBoolean answered = new AtomicBoolean(false);
 
-                SwingUtilities.invokeLater(
-                    listener::onTimeUp
-                );
+        Thread timerThread = new Thread(() -> {
+
+            for (int i = TIME_LIMIT; i >= 1; i--) {
+
+                if (answered.get()) {
+                    return;
+                }
+
+                System.out.println("Time left: " + i + " seconds");
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        });
+
+        timerThread.start();
+
+        try {
+
+            String answer = inputQueue.poll(
+                    TIME_LIMIT, TimeUnit.SECONDS);
+
+            answered.set(true);
+            timerThread.interrupt();
+
+            if (answer == null) {
+                System.out.println("Time's up!");
+                return null;
             }
 
-        }, 1, 1, TimeUnit.SECONDS);
-    }
+            return answer;
 
-    public synchronized void stopTimer() {
+        } catch (InterruptedException e) {
 
-        if (timerTask != null) {
-            timerTask.cancel(false);
-            timerTask = null;
+            answered.set(true);
+            timerThread.interrupt();
+            Thread.currentThread().interrupt();
+
+            return null;
         }
     }
-
-    public synchronized void resetTimer() {
-        stopTimer();
-        remainingSeconds = 0;
-    }
-
-    public int getRemainingSeconds() {
-        return remainingSeconds;
-    }
-
-    public synchronized void shutdown() {
-        stopTimer();
-        executor.shutdownNow();
-    }
 }
- 
-
-
-
-

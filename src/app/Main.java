@@ -13,10 +13,13 @@ public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("Welcome to QuizVerse");
+        System.out.println("================================");
+        System.out.println("       WELCOME TO BRAINSTORM");
+        System.out.println("================================");
 
         Scanner sc = new Scanner(System.in);
 
+        // Player registration
         System.out.print("Enter number of players: ");
         int numberOfPlayers = sc.nextInt();
         sc.nextLine();
@@ -30,7 +33,8 @@ public class Main {
         List<Player> players = new ArrayList<>();
 
         for (int i = 0; i < numberOfPlayers; i++) {
-            System.out.print("Enter your name: ");
+
+            System.out.print("Enter Player " + (i + 1) + " name: ");
             String name = sc.nextLine();
 
             Player player = new Player(name);
@@ -49,18 +53,21 @@ public class Main {
         while (choice < 1 || choice > 4) {
 
             System.out.print("Enter your choice (1-4): ");
-
             String input = sc.nextLine();
 
             try {
                 choice = Integer.parseInt(input);
 
                 if (choice < 1 || choice > 4) {
-                    System.out.println("Please enter a number between 1 and 4.");
+                    System.out.println(
+                        "Please enter a number between 1 and 4."
+                    );
                 }
 
             } catch (NumberFormatException e) {
-                System.out.println("Invalid input! Please enter a number, not text.");
+                System.out.println(
+                    "Invalid input! Please enter a number, not text."
+                );
             }
         }
 
@@ -80,13 +87,9 @@ public class Main {
                 category = "DBMS";
                 break;
             default:
-                System.out.println("Invalid subject choice!");
                 sc.close();
                 return;
         }
-
-        // Fetch questions from MySQL
-        QuestionDAO dao = new QuestionDAO();
 
         // Difficulty selection
         System.out.println("\nSelect difficulty:");
@@ -97,6 +100,7 @@ public class Main {
         int difficultyChoice = 0;
 
         while (difficultyChoice < 1 || difficultyChoice > 3) {
+
             System.out.print("Enter your choice (1-3): ");
             String input = sc.nextLine();
 
@@ -104,11 +108,15 @@ public class Main {
                 difficultyChoice = Integer.parseInt(input);
 
                 if (difficultyChoice < 1 || difficultyChoice > 3) {
-                    System.out.println("Please enter a number between 1 and 3.");
+                    System.out.println(
+                        "Please enter a number between 1 and 3."
+                    );
                 }
 
             } catch (NumberFormatException e) {
-                System.out.println("Invalid input! Please enter a number.");
+                System.out.println(
+                    "Invalid input! Please enter a number."
+                );
             }
         }
 
@@ -127,18 +135,32 @@ public class Main {
             default:
                 difficulty = "Easy";
         }
-        
-        List<Question> questions = dao.getQuestionsByCategoryAndDifficulty(category, difficulty);
 
-        System.out.println("Loading " + difficulty + " " + category + " questions...");
+        // Fetch questions from MySQL
+        QuestionDAO dao = new QuestionDAO();
+
+        System.out.println(
+            "\nLoading " + difficulty + " " + category + " questions..."
+        );
+
+        List<Question> questions =
+            dao.getQuestionsByCategoryAndDifficulty(
+                category, difficulty
+            );
 
         if (questions.isEmpty()) {
-            System.out.println("No " + difficulty + " questions available for " + category + "!");
+            System.out.println(
+                "No questions available for this subject and difficulty!"
+            );
             sc.close();
             return;
         }
 
-        // Start the game
+        System.out.println(
+            "Successfully loaded " + questions.size() + " questions!"
+        );
+
+        // Start the quiz
         QuizEngine game = new QuizEngine(players, questions, sc);
 
         game.startQuiz();

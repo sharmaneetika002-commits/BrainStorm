@@ -1,18 +1,20 @@
+
 package app;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
-import java.util.LinkedHashMap;
+
 import java.util.Scanner;
 
-import models.MCQQuestion;
 import models.Player;
 import models.Question;
+import models.MCQQuestion;
 
 import scoring.ScoreManager;
 import scoring.Leaderboard;
+
+import ui.TimeService;
 
 public class QuizEngine {
 
@@ -28,7 +30,10 @@ public class QuizEngine {
 
     private Scanner sc;
 
-    public QuizEngine(List<Player> players, List<Question> questions, Scanner sc) {
+    public QuizEngine(
+            List<Player> players,
+            List<Question> questions,
+            Scanner sc) {
 
         this.players = players;
         this.questions = questions;
@@ -37,102 +42,127 @@ public class QuizEngine {
 
     public void startQuiz() {
 
-        System.out.println("QuizVerse is starting!");
+        System.out.println("\nWelcome to QuizVerse!");
+        System.out.println("You have 10 seconds to answer each question.");
 
-        List<Question> selectedQuestions = getRandomQuestions(questions);
+        List<Question> selectedQuestions =
+                getRandomQuestions(questions);
 
         if (selectedQuestions.isEmpty()) {
             System.out.println("No questions available!");
             return;
         }
 
+        // Go through each question
         for (Question selectedQuestion : selectedQuestions) {
 
-            System.out.println("\n" + selectedQuestion.getQuestionText());
+            System.out.println("\n--------------------------------");
+            System.out.println(selectedQuestion.getQuestionText());
 
+            // Display MCQ options
             MCQQuestion mcq = (MCQQuestion) selectedQuestion;
 
             String[] options = mcq.getOptions();
 
-            // Display options
             for (int i = 0; i < options.length; i++) {
-                System.out.println((char) ('A' + i) + ". " + options[i]);
+                System.out.println(
+                    (char) ('A' + i) + ". " + options[i]
+                );
             }
 
-            Map<Player, String> answers = new LinkedHashMap<>();
-
-            // Collect answers from all players
+            // Each player gets a turn
             for (Player player : players) {
 
-                System.out.println("\n" + player.getName() + " is answering");
+                System.out.println(
+                    "\n" + player.getName() + " is answering."
+                );
 
-                System.out.print("Enter your answer: ");
+                System.out.print("Enter your answer (A/B/C/D): ");
 
-                String answer = sc.nextLine().trim().toUpperCase();
+                // Get answer using multithreaded timer
+                String answer = TimeService.getAnswerWithTimer(sc);
 
-                while (answer.length() != 1 ||
-                        answer.charAt(0) < 'A' ||
-                        answer.charAt(0) >= 'A' + options.length) {
+                // Handle timeout
+                if (answer == null) {
 
-                    System.out.println("Invalid answer, please enter one of the options.");
-                    answer = sc.nextLine().trim().toUpperCase();
+                    System.out.println(
+                        player.getName() + " did not answer in time!"
+                    );
+
+                    System.out.println("No points awarded.");
+                    continue;
                 }
 
-                answers.put(player, answer);
-            }
+                answer = answer.trim().toUpperCase();
 
-            // Reveal correct answer
-            String correctAnswer = mcq.getCorrectAnswer();
+                // Validate answer
+                if (answer.length() != 1 ||
+                    answer.charAt(0) < 'A' ||
+                    answer.charAt(0) >= 'A' + options.length) {
 
-            System.out.println("\nCorrect answer: " + correctAnswer);
+                    System.out.println("Invalid answer!");
+                    System.out.println("No points awarded.");
+                    continue;
+                }
 
-            // Process scores
-            for (Map.Entry<Player, String> entry : answers.entrySet()) {
-
-                Player currentPlayer = entry.getKey();
-
-                String playerAnswer = entry.getValue();
-
+                // Check answer and update score
                 boolean isCorrect = scores.processAnswer(
-                        currentPlayer,
-                        selectedQuestion,
-                        playerAnswer);
+                    player, selectedQuestion, answer
+                );
 
                 if (isCorrect) {
-                    System.out.println(currentPlayer.getName() + ": Correct! You earn 10 points!");
+
+                    System.out.println(
+                        "Correct answer! You earned 10 points!"
+                    );
+
                 } else {
-                    System.out.println(currentPlayer.getName() + ": Incorrect! Better luck next time.");
+
+                    System.out.println("Wrong answer!");
                 }
 
-                System.out.println("Current score: " + scores.getScore(currentPlayer));
+                System.out.println(
+                    "Current score: " + scores.getScore(player)
+                );
             }
         }
 
-        // Display leaderboard
-        System.out.println("\n" + leaderboard.displayLeaderboard(players));
+        // Display final leaderboard
+        System.out.println("\n===== FINAL LEADERBOARD =====");
 
-        // Display winners
+        System.out.println(
+            leaderboard.displayLeaderboard(players)
+        );
+
+        // Display winner
         winners = leaderboard.getWinners(players);
 
-        System.out.println("\nWinner(s):");
+        System.out.println("\n===== WINNER(S) =====");
 
         for (Player winner : winners) {
             System.out.println(winner.getName());
         }
     }
 
-    private List<Question> getRandomQuestions(List<Question> allQuestions) {
+    // Select up to 10 random questions
+    private List<Question> getRandomQuestions(
+            List<Question> allQuestions) {
 
         if (allQuestions == null || allQuestions.isEmpty()) {
             return new ArrayList<>();
         }
 
-        ArrayList<Question> list = new ArrayList<>(allQuestions);
+        ArrayList<Question> list =
+                new ArrayList<>(allQuestions);
 
         Collections.shuffle(list);
 
-        int count = Math.min(QUESTIONS_PER_GAME, list.size());
+        int count = Math.min(
+            QUESTIONS_PER_GAME, list.size()
+        );
 
-        return new ArrayList<>(list.subList(0, count));
+        return new ArrayList<>(
+            list.subList(0, count)
+        );
     }
 }
