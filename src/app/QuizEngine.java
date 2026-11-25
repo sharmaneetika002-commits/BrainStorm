@@ -68,18 +68,17 @@ public class QuizEngine {
 
                 System.out.print("Enter your answer: ");
 
-                String answer = sc.nextLine().trim();
+                String answer = sc.nextLine().trim().toUpperCase();
 
                 while (answer.length() != 1 ||
-                       answer.toUpperCase().charAt(0) < 'A' ||
-                       answer.toUpperCase().charAt(0) >= 'A' + options.length) {
+                        answer.charAt(0) < 'A' ||
+                        answer.charAt(0) >= 'A' + options.length) {
 
                     System.out.println("Invalid answer, please enter one of the options.");
-
-                    answer = sc.nextLine().trim();
+                    answer = sc.nextLine().trim().toUpperCase();
                 }
 
-                answers.put(player, answer.toUpperCase());
+                answers.put(player, answer);
             }
 
             // Reveal correct answer
@@ -95,10 +94,9 @@ public class QuizEngine {
                 String playerAnswer = entry.getValue();
 
                 boolean isCorrect = scores.processAnswer(
-                    currentPlayer,
-                    selectedQuestion,
-                    playerAnswer
-                );
+                        currentPlayer,
+                        selectedQuestion,
+                        playerAnswer);
 
                 if (isCorrect) {
                     System.out.println(currentPlayer.getName() + ": Correct! You earn 10 points!");

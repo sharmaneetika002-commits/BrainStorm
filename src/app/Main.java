@@ -3,7 +3,6 @@ package app;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 import models.MCQQuestion;
 import models.Player;
 import models.Question;
@@ -18,6 +17,11 @@ public class Main {
         System.out.print("Enter number of players: ");
         int numberOfPlayers = sc.nextInt();
         sc.nextLine();
+        if (numberOfPlayers <= 0) {
+            System.out.println("You need at least one player!");
+            sc.close();
+            return;
+        }
         List<Player> players = new ArrayList<>();
         for (int i = 0; i < numberOfPlayers; i++) {
             System.out.println("Enter your name: ");
@@ -48,7 +52,6 @@ public class Main {
 
         questions.addAll(bank.getQuestionsByCategory("Java"));
         questions.addAll(bank.getQuestionsByCategory("DBMS"));
-
         QuizEngine game = new QuizEngine(players, questions, sc);
         game.startQuiz();
 
